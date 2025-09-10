@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { COLORS } from '../constants/Colors';
 import { useDrawer } from '../constants/DrawerContext';
 import { useLanguage } from '../constants/LanguageContext';
+import { useAuth } from '@clerk/clerk-expo';
 
 const DRAWER_WIDTH = 280;
 const screenWidth = Dimensions.get('window').width;
@@ -16,6 +17,7 @@ export const GlobalDrawer: React.FC<GlobalDrawerProps> = ({ children }) => {
   const { isDrawerOpen, closeDrawer } = useDrawer();
   const { t } = useLanguage();
   const router = useRouter();
+  const { signOut } = useAuth();
 
   const drawerTranslateX = React.useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const overlayOpacity = React.useRef(new Animated.Value(0)).current;
@@ -73,6 +75,17 @@ export const GlobalDrawer: React.FC<GlobalDrawerProps> = ({ children }) => {
   const navigateToWIB = () => {
     closeDrawer();
     router.push('/screens/WIB');
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      closeDrawer();
+      router.replace('/(auth)/sign-in');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      Alert.alert('Erreur', 'Une erreur est survenue lors de la déconnexion');
+    }
   };
 
   return (
@@ -142,6 +155,16 @@ export const GlobalDrawer: React.FC<GlobalDrawerProps> = ({ children }) => {
             <Text style={styles.wibLogo}>🌸</Text>
             <Text style={styles.drawerItemText}>{t('wib')}</Text>
           </View>
+        </TouchableOpacity>
+
+        <View style={styles.separator} />
+
+        {/* Bouton de déconnexion */}
+        <TouchableOpacity 
+          style={[styles.drawerItem, { marginTop: 'auto' }]} 
+          onPress={handleSignOut}
+        >
+          <Text style={[styles.drawerItemText, { color: '#ff6b6b' }]}>🚪 {t('signOut')}</Text>
         </TouchableOpacity>
 
         <View style={styles.separator} />
