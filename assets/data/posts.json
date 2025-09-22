@@ -1,0 +1,46 @@
+[
+  {
+    "id": "post-1",
+    "title": "🎉 Meetup 'Découverte de l'IA Générative'",
+    "description": "Ne manquez pas notre prochain meetup le 5 octobre à 18h. Au programme : talks inspirants et networking. #WTM #Casablanca",
+    "image": "https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "user_id": "user-uuid-1",
+    "group_id": "group-1",
+    "created_at": "2024-09-20T12:00:00Z",
+    "updated_at": "2024-09-20T12:00:00Z",
+    "status": "published",
+    "video": null,
+    "users": {
+      "id": "user-uuid-1",
+      "name": "Fatima Zahra",
+      "image": "https://randomuser.me/api/portraits/women/1.jpg",
+      "email": "fatima@wib.ma",
+      "created_at": "2024-01-10T10:00:00Z",
+      "updated_at": "2024-01-10T10:00:00Z",
+      "role": "member"
+    },
+    "likes": []
+  },
+  {
+    "id": "post-2",
+    "title": "Recherche de speakers pour conférence mobile",
+    "description": "Nous cherchons des speakers pour notre conférence annuelle. Si vous êtes passionné par React Native, Flutter ou Swift, contactez-nous ! 🚀",
+    "image": null,
+    "user_id": "user-uuid-2",
+    "group_id": "group-2",
+    "created_at": "2024-09-18T09:45:00Z",
+    "updated_at": "2024-09-18T09:45:00Z",
+    "status": "published",
+    "video": null,
+    "users": {
+      "id": "user-uuid-2",
+      "name": "Amina El Alaoui",
+      "image": "https://randomuser.me/api/portraits/women/2.jpg",
+      "email": "amina@reactnative.ma",
+      "created_at": "2024-02-15T11:00:00Z",
+      "updated_at": "2024-02-15T11:00:00Z",
+      "role": "admin"
+    },
+    "likes": []
+  }
+]

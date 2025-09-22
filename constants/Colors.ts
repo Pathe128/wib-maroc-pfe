@@ -3,4 +3,5 @@ export const COLORS = {
   secondary: "#FFC107", // Jaune
   background: "#fff",
   text: "#222",
-}; 
+  textMuted: "#6c757d",
+};

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "group-1",
+    "name": "Women in Tech Casablanca",
+    "description": "Un groupe pour toutes les femmes dans la tech à Casablanca. Partage d'expériences, entraide et networking.",
+    "created_at": "2024-01-15T10:00:00Z"
+  },
+  {
+    "id": "group-2",
+    "name": "React Native Developers Morocco",
+    "description": "Le point de rencontre pour les développeurs React Native au Maroc. Discussions techniques, veille et projets.",
+    "created_at": "2024-02-20T14:30:00Z"
+  }
+]

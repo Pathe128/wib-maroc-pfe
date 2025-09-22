@@ -8,15 +8,17 @@
     "scheme": "wibmaroc",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
+      "package": "com.papacisse.wibmaroc",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
+    },
+    "ios": {
+      "bundleIdentifier": "com.papacisse.wibmaroc",
+      "supportsTablet": true
     },
     "web": {
       "bundler": "metro",
