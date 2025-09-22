@@ -1,24 +1,42 @@
-import { useQuery } from '@tanstack/react-query';
-import { getPosts, getPostById } from '../../services/postService';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
+import { Alert } from 'react-native';
+import { createPost, getPosts } from '../../services/api';
 
-/**
- * Hook pour récupérer la liste de tous les posts.
- */
 export const usePosts = () => {
   return useQuery({
     queryKey: ['posts'],
     queryFn: getPosts,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
-/**
- * Hook pour récupérer les détails d'un post spécifique.
- * @param id - L'ID du post à récupérer.
- */
-export const usePost = (id: string) => {
-  return useQuery({
-    queryKey: ['post', id],
-    queryFn: () => getPostById(id),
-    enabled: !!id, // La requête ne s'exécutera que si l'ID est fourni
+export const useCreatePost = () => {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: createPost,
+    onSuccess: (data) => {
+      console.log('✅ Post créé avec succès:', data);
+      
+      // Mise à jour optimiste du cache
+      queryClient.setQueryData(['posts'], (oldData: any) => {
+        if (!oldData) return [data];
+        return [data[0], ...oldData];
+      });
+      
+      // Redirection après succès
+      setTimeout(() => {
+        router.back();
+      }, 1000);
+    },
+    onError: (error: any) => {
+      console.error("❌ Erreur création post:", error);
+      Alert.alert(
+        'Erreur',
+        error.message || 'Une erreur est survenue lors de la création du post.'
+      );
+    }
   });
 };

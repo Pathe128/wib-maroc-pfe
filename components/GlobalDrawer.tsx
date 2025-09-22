@@ -62,6 +62,11 @@ export const GlobalDrawer: React.FC<GlobalDrawerProps> = ({ children }) => {
     router.push('/onboarding/modules');
   };
 
+  const navigateToCreateEvent = () => {
+    closeDrawer();
+    router.push('/CreateEventScreen');
+  };
+
   const navigateToProfile = () => {
     closeDrawer();
     router.push('/screens/Profil');
@@ -140,6 +145,10 @@ export const GlobalDrawer: React.FC<GlobalDrawerProps> = ({ children }) => {
 
         <TouchableOpacity style={styles.drawerItem} onPress={navigateToDiscovery}>
           <Text style={styles.drawerItemText}>🌟 {t('discovery')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.drawerItem} onPress={navigateToCreateEvent}>
+          <Text style={styles.drawerItemText}>➕ Créer un événement</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.drawerItem} onPress={navigateToProfile}>
