@@ -1,13 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
-import { createPost, getPosts } from '../../services/api';
+import { createPost, getPostById, getPosts } from '../../services/api'; // Ajoutez getPostById
 
 export const usePosts = () => {
   return useQuery({
     queryKey: ['posts'],
     queryFn: getPosts,
     staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+// ✅ AJOUTEZ CE HOOK MANQUANT
+export const usePost = (id: string) => {
+  return useQuery({
+    queryKey: ['post', id],
+    queryFn: () => getPostById(id),
+    enabled: !!id, // Ne s'exécute que si l'ID existe
   });
 };
 
@@ -20,13 +29,11 @@ export const useCreatePost = () => {
     onSuccess: (data) => {
       console.log('✅ Post créé avec succès:', data);
       
-      // Mise à jour optimiste du cache
       queryClient.setQueryData(['posts'], (oldData: any) => {
         if (!oldData) return [data];
         return [data[0], ...oldData];
       });
       
-      // Redirection après succès
       setTimeout(() => {
         router.back();
       }, 1000);

@@ -114,6 +114,75 @@ export const createPost = async (payload: CreatePostPayload) => {
   }
 };
 
+// 3. RÉCUPÉRATION D'UN POST SPÉCIFIQUE PAR ID
+export const getPostById = async (postId: string) => {
+  try {
+    console.log('Récupération du post avec ID:', postId);
+    
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
+        *,
+        users (*),
+        groups (*),
+        likes (user_id),
+        comments (
+          id,
+          user_id,
+          comment,
+          created_at,
+          users (
+            id,
+            name,
+            image
+          )
+        )
+      `)
+      .eq('id', postId)
+      .single();
+
+    if (error) {
+      console.error('Erreur récupération post:', error);
+      throw new Error(`Erreur récupération post: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('Post non trouvé');
+    }
+
+    console.log('Post récupéré avec succès:', data.id);
+    return data;
+  } catch (error) {
+    console.error('Erreur dans getPostById:', error);
+    throw error;
+  }
+};
+
+// 4. RÉCUPÉRATION DE TOUS LES POSTS
+export const getPosts = async () => {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(`
+      *,
+      users (*),
+      groups (*),
+      likes (user_id),
+      comments (id, user_id, comment, created_at)
+    `)
+    .eq('status', 'published')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erreur récupération posts:', error);
+    throw new Error(error.message);
+  }
+  
+  console.log('Nombre de posts récupérés:', data?.length);
+  return data;
+};
+
+// FONCTIONS INTERNES
+
 // Fonction pour récupérer ou créer un utilisateur
 const getOrCreateUser = async (clerkId: string): Promise<string> => {
   try {
@@ -123,7 +192,7 @@ const getOrCreateUser = async (clerkId: string): Promise<string> => {
     const { data: existingUser, error: userError } = await supabase
       .from('users')
       .select('id, name, email')
-      .eq('clerk_id', clerkId) // CORRECTION ICI : utiliser clerk_id directement
+      .eq('clerk_id', clerkId)
       .single();
 
     if (userError && userError.code === 'PGRST116') {
@@ -148,8 +217,8 @@ const createUser = async (clerkId: string): Promise<string> => {
   try {
     const userData = {
       clerk_id: clerkId,
-      name: 'Utilisateur', // Vous pouvez récupérer le nom depuis Clerk si disponible
-      email: `${clerkId}@wibmaroc.com`, // Email unique basé sur clerkId
+      name: 'Utilisateur',
+      email: `${clerkId}@wibmaroc.com`,
       role: 'user'
     };
 
@@ -164,7 +233,6 @@ const createUser = async (clerkId: string): Promise<string> => {
     if (createError) {
       console.error('Erreur création utilisateur:', createError);
       
-      // Si l'erreur est due à une violation d'email unique, essayer avec un email différent
       if (createError.code === '23505' && createError.details?.includes('email')) {
         console.log('Email déjà utilisé, tentative avec email alternatif...');
         return await createUserWithAlternateEmail(clerkId);
@@ -186,18 +254,18 @@ const createUserWithAlternateEmail = async (clerkId: string): Promise<string> =>
   const userData = {
     clerk_id: clerkId,
     name: 'Utilisateur',
-    email: `${clerkId}_${Date.now()}@wibmaroc.com`, // Email unique avec timestamp
+    email: `${clerkId}_${Date.now()}@wibmaroc.com`,
     role: 'user'
   };
 
-  const { data: newUser, error: createError } = await supabase
+  const { data: newUser, error } = await supabase
     .from('users')
     .insert([userData])
     .select('id')
     .single();
 
-  if (createError) {
-    throw new Error(`Erreur création utilisateur (email alternatif): ${createError.message}`);
+  if (error) {
+    throw new Error(`Erreur création utilisateur (email alternatif): ${error.message}`);
   }
 
   return newUser.id;
@@ -275,31 +343,9 @@ const getOrCreateDefaultGroup = async (userId: string): Promise<string> => {
 
     if (tempError) {
       console.error('Erreur création groupe temporaire:', tempError);
-      // Si tout échoue, utiliser un UUID par défaut (solution temporaire)
       return '550e8400-e29b-41d4-a716-446655440000';
     }
 
     return tempGroup.id;
   }
-};
-
-// 3. RÉCUPÉRATION DES POSTS
-export const getPosts = async () => {
-  const { data, error } = await supabase
-    .from('posts')
-    .select(`
-      *,
-      users (*),
-      groups (*),
-      likes (user_id),
-      comments (id, user_id, comment, created_at)
-    `)
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Erreur récupération posts:', error);
-    throw new Error(error.message);
-  }
-  return data;
 };

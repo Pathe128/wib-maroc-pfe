@@ -1,8 +1,8 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Image } from 'react-native';
-import { usePost } from '../../lib/hooks/usePosts';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import PostListItem from '../../components/PostListItem';
+import { usePost } from '../../lib/hooks/usePosts';
 
 const PostDetailScreen = () => {
   const { id } = useLocalSearchParams();
