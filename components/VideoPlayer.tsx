@@ -1,15 +1,22 @@
 import { Feather } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Dimensions, StyleSheet, Text, View } from 'react-native';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { COLORS } from '../constants/Colors';
 
 interface VideoPlayerProps {
   videoUrl: string;
   isFullscreen?: boolean;
+  aspectRatio?: number; // Nouvelle prop pour contrôler l'aspect ratio
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, isFullscreen = false }) => {
+const { width: screenWidth } = Dimensions.get('window');
+
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ 
+  videoUrl, 
+  isFullscreen = false,
+  aspectRatio = 16/9 // Aspect ratio par défaut 16:9
+}) => {
   const [loading, setLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -23,11 +30,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, isFullscreen = fals
     return null;
   };
 
+  // Calcul de la hauteur basé sur l'aspect ratio
+  const playerHeight = isFullscreen 
+    ? 400 
+    : Math.min(screenWidth * 0.5625, screenWidth / aspectRatio); // Max 16:9 par défaut
+
   const youtubeId = getYouTubeId(videoUrl);
 
   if (!youtubeId) {
     return (
-      <View style={[styles.container, styles.errorContainer]}>
+      <View style={[styles.container, styles.errorContainer, { height: playerHeight }]}>
         <Feather name="alert-circle" size={48} color={COLORS.textMuted} />
         <Text style={styles.errorTitle}>Vidéo non disponible</Text>
         <Text style={styles.errorSubtitle}>L'URL YouTube est invalide</Text>
@@ -37,7 +49,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, isFullscreen = fals
 
   if (hasError) {
     return (
-      <View style={[styles.container, styles.errorContainer]}>
+      <View style={[styles.container, styles.errorContainer, { height: playerHeight }]}>
         <Feather name="wifi-off" size={48} color={COLORS.textMuted} />
         <Text style={styles.errorTitle}>Erreur de chargement</Text>
         <Text style={styles.errorSubtitle}>Vérifiez votre connexion</Text>
@@ -46,7 +58,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, isFullscreen = fals
   }
 
   return (
-    <View style={[styles.container, isFullscreen && styles.fullscreen]}>
+    <View style={[styles.container, isFullscreen && styles.fullscreen, { height: playerHeight }]}>
       {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={COLORS.primary} />
@@ -55,7 +67,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, isFullscreen = fals
       )}
       
       <YoutubePlayer
-        height={isFullscreen ? 400 : 300}
+        height={playerHeight}
         videoId={youtubeId}
         play={false}
         onReady={() => {
@@ -86,7 +98,6 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 3,
   },
   fullscreen: {

@@ -1,10 +1,11 @@
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { Alert, Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '../constants/Colors';
 import { useDrawer } from '../constants/DrawerContext';
 import { useLanguage } from '../constants/LanguageContext';
-import { useAuth } from '@clerk/clerk-expo';
+import { getInitials, getUserAvatarUrl } from '../utils/avatarUtils';
 
 const DRAWER_WIDTH = 280;
 const screenWidth = Dimensions.get('window').width;
@@ -18,9 +19,24 @@ export const GlobalDrawer: React.FC<GlobalDrawerProps> = ({ children }) => {
   const { t } = useLanguage();
   const router = useRouter();
   const { signOut } = useAuth();
+  const { user } = useUser();
 
   const drawerTranslateX = React.useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const overlayOpacity = React.useRef(new Animated.Value(0)).current;
+
+  // Récupérer l'URL de l'avatar basé sur l'email
+  const userAvatarUrl = React.useMemo(() => {
+    if (!user) return null;
+    return getUserAvatarUrl(user);
+  }, [user]);
+
+  // Générer les initiales pour le fallback
+  const userInitials = React.useMemo(() => {
+    if (!user) return '?';
+    const email = user.primaryEmailAddress?.emailAddress;
+    const name = user.fullName || user.firstName || email;
+    return getInitials(name || email || '');
+  }, [user]);
 
   React.useEffect(() => {
     if (isDrawerOpen) {
@@ -129,61 +145,89 @@ export const GlobalDrawer: React.FC<GlobalDrawerProps> = ({ children }) => {
       >
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          <View style={styles.profileImage}>
-            <Text style={styles.profileIcon}>👤</Text>
-          </View>
-          <Text style={styles.profileName}>Fatima Zahra</Text>
-          <Text style={styles.profileRole}>Entrepreneure</Text>
+          {userAvatarUrl ? (
+            <Image 
+              source={{ uri: userAvatarUrl }} 
+              style={styles.profileImage}
+              onError={() => console.log('Erreur chargement avatar')}
+            />
+          ) : (
+            <View style={[styles.profileImage, styles.initialsAvatar]}>
+              <Text style={styles.initialsText}>{userInitials}</Text>
+            </View>
+          )}
+          <Text style={styles.profileName}>{user?.primaryEmailAddress?.emailAddress}</Text>
+          {user?.fullName && (
+            <Text style={styles.profileRole}>{user.fullName}</Text>
+          )}
         </View>
 
         <View style={styles.separator} />
 
-        {/* Navigation Links */}
-        <TouchableOpacity style={styles.drawerItem} onPress={navigateToHome}>
-          <Text style={styles.drawerItemText}>🏠 {t('home')}</Text>
-        </TouchableOpacity>
+        {/* Navigation Principale - En haut */}
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>NAVIGATION</Text>
+          
+          <TouchableOpacity style={styles.drawerItem} onPress={navigateToHome}>
+            <View style={styles.menuItem}>
+              <Text style={styles.menuIcon}>🏠</Text>
+              <Text style={styles.drawerItemText}>{t('home')}</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.drawerItem} onPress={navigateToDiscovery}>
-          <Text style={styles.drawerItemText}>🌟 {t('discovery')}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.drawerItem} onPress={navigateToDiscovery}>
+            <View style={styles.menuItem}>
+              <Text style={styles.menuIcon}>🌟</Text>
+              <Text style={styles.drawerItemText}>{t('discovery')}</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.drawerItem} onPress={navigateToCreateEvent}>
-          <Text style={styles.drawerItemText}>➕ Créer un événement</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.drawerItem} onPress={navigateToProfile}>
+            <View style={styles.menuItem}>
+              <Text style={styles.menuIcon}>👤</Text>
+              <Text style={styles.drawerItemText}>{t('profile')}</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.drawerItem} onPress={navigateToProfile}>
-          <Text style={styles.drawerItemText}>👤 {t('profile')}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.drawerItem} onPress={navigateToSupport}>
+            <View style={styles.menuItem}>
+              <Text style={styles.menuIcon}>❓</Text>
+              <Text style={styles.drawerItemText}>Support</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.drawerItem} onPress={navigateToSupport}>
-          <Text style={styles.drawerItemText}>❓ Support</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.drawerItem} onPress={navigateToWIB}>
+            <View style={styles.menuItem}>
+              <Text style={styles.menuIcon}>🌸</Text>
+              <Text style={styles.drawerItemText}>{t('wib')}</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={styles.drawerItem} onPress={navigateToWIB}>
-          <View style={styles.wibItem}>
-            <Text style={styles.wibLogo}>🌸</Text>
-            <Text style={styles.drawerItemText}>{t('wib')}</Text>
-          </View>
-        </TouchableOpacity>
-
+        {/* Séparateur avant les actions */}
         <View style={styles.separator} />
 
-        {/* Bouton de déconnexion */}
-        <TouchableOpacity 
-          style={[styles.drawerItem, { marginTop: 'auto' }]} 
-          onPress={handleSignOut}
-        >
-          <Text style={[styles.drawerItemText, { color: '#ff6b6b' }]}>🚪 {t('signOut')}</Text>
-        </TouchableOpacity>
+        {/* Actions - En bas */}
+        <View style={styles.actionsSection}>
+          <Text style={styles.sectionTitle}>ACTIONS</Text>
+          
+          <TouchableOpacity style={styles.drawerItem} onPress={navigateToCreateEvent}>
+            <View style={styles.menuItem}>
+              <Text style={styles.menuIcon}>➕</Text>
+              <Text style={styles.drawerItemText}>Créer un événement</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
-        <View style={styles.separator} />
-
-        {/* Theme Toggle */}
-        <View style={styles.themeSection}>
-          <Text style={styles.themeText}>🌙 {t('theme')}</Text>
-          <TouchableOpacity style={styles.themeToggle}>
-            <View style={styles.toggleTrack}>
-              <View style={styles.toggleThumb} />
+        {/* Déconnexion - Tout en bas */}
+        <View style={styles.bottomSection}>
+          <TouchableOpacity 
+            style={[styles.drawerItem, styles.signOutButton]} 
+            onPress={handleSignOut}
+          >
+            <View style={styles.menuItem}>
+              <Text style={styles.menuIcon}>🚪</Text>
+              <Text style={styles.signOutText}>{t('signOut')}</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -217,94 +261,105 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: DRAWER_WIDTH,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    paddingTop: 50,
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 30,
     zIndex: 1001,
     shadowColor: '#000',
     shadowOffset: { width: 2, height: 0 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 5,
+    justifyContent: 'space-between',
   },
   profileSection: {
     alignItems: 'center',
     paddingVertical: 20,
+    paddingHorizontal: 10,
   },
   profileImage: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+    borderWidth: 3,
+    borderColor: COLORS.primary,
   },
-  profileIcon: {
-    fontSize: 32,
+  initialsAvatar: {
+    backgroundColor: COLORS.primary,
+  },
+  initialsText: {
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#fff',
   },
   profileName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#222',
     marginBottom: 4,
+    textAlign: 'center',
   },
   profileRole: {
     fontSize: 14,
     color: '#666',
+    textAlign: 'center',
   },
   separator: {
     height: 1,
-    backgroundColor: '#eee',
-    marginVertical: 20,
+    backgroundColor: '#e0e0e0',
+    marginVertical: 15,
+  },
+  menuSection: {
+    flex: 1,
+  },
+  actionsSection: {
+    marginBottom: 10,
+  },
+  bottomSection: {
+    marginTop: 'auto',
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#888',
+    marginBottom: 15,
+    marginLeft: 8,
+    letterSpacing: 1,
   },
   drawerItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    marginBottom: 5,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuIcon: {
+    fontSize: 20,
+    width: 30,
+    marginRight: 12,
   },
   drawerItemText: {
     fontSize: 16,
     color: '#333',
     fontWeight: '500',
   },
-  wibItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  signOutButton: {
+    backgroundColor: '#fff5f5',
+    borderWidth: 1,
+    borderColor: '#fed7d7',
+    marginTop: 10,
   },
-  wibLogo: {
-    fontSize: 20,
-    marginRight: 8,
-  },
-  themeSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-  },
-  themeText: {
+  signOutText: {
     fontSize: 16,
-    color: '#333',
+    color: '#e53e3e',
     fontWeight: '500',
-  },
-  themeToggle: {
-    padding: 4,
-  },
-  toggleTrack: {
-    width: 50,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#ddd',
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  toggleThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    alignSelf: 'flex-end',
   },
 });

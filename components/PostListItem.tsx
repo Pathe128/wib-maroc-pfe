@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
     width: '100%',
     overflow: 'hidden',
     resizeMode: 'cover',
+    aspectRatio: 16/9,
   },
   loadingContainer: {
     position: 'absolute',

@@ -23,6 +23,9 @@ export default function SignInScreen() {
   const [emailAddress, setEmailAddress] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [error, setError] = React.useState('')
+  const [showForgotPassword, setShowForgotPassword] = React.useState(false)
+  const [resetEmail, setResetEmail] = React.useState('')
+  const [resetLoading, setResetLoading] = React.useState(false)
 
   const onSignInPress = async () => {
     if (!isLoaded) return
@@ -49,9 +52,38 @@ export default function SignInScreen() {
       }
     } catch (err: any) {
       console.error(JSON.stringify(err, null, 2))
-      setError(err.errors?.[0]?.message || t('signInError'))
+      const errorMessage = err.errors?.[0]?.message || t('signInError')
+      if (errorMessage.includes('password') || errorMessage.includes('credentials')) {
+        setError('Email ou mot de passe incorrect. Vérifiez vos identifiants et réessayez.')
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const onForgotPasswordPress = async () => {
+    if (!resetEmail.trim()) {
+      setError('Veuillez saisir votre adresse email')
+      return
+    }
+
+    setResetLoading(true)
+    setError('')
+
+    try {
+      await signIn.create({
+        strategy: 'reset_password_email_code',
+        identifier: resetEmail,
+      })
+      router.push({ pathname: '/reset-password' } as any);
+    } catch (err: any) {
+      console.error(JSON.stringify(err, null, 2))
+      const errorMessage = err.errors?.[0]?.message || 'Erreur lors de l\'envoi du code'
+      setError(errorMessage)
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -101,7 +133,36 @@ export default function SignInScreen() {
               onSubmitEditing={onSignInPress}
               returnKeyType="go"
             />
+            <TouchableOpacity onPress={() => setShowForgotPassword(!showForgotPassword)} style={{alignSelf: 'flex-end', marginTop: 10}}>
+                <Text style={styles.link}>{t('forgotPassword')}</Text>
+            </TouchableOpacity>
           </View>
+
+          {showForgotPassword && (
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>{t('resetPassword')}</Text>
+                <TextInput
+                    style={styles.input}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    value={resetEmail}
+                    placeholder={t('enterEmail')}
+                    placeholderTextColor="#999"
+                    onChangeText={setResetEmail}
+                />
+                <TouchableOpacity 
+                    style={[styles.button, resetLoading && styles.buttonDisabled]} 
+                    onPress={onForgotPasswordPress}
+                    disabled={resetLoading}
+                >
+                    {resetLoading ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={styles.buttonText}>{t('sendResetCode')}</Text>
+                    )}
+                </TouchableOpacity>
+            </View>
+          )}
           
           <TouchableOpacity 
             style={[styles.button, isLoading && styles.buttonDisabled]} 
