@@ -145,20 +145,28 @@ export const GlobalDrawer: React.FC<GlobalDrawerProps> = ({ children }) => {
       >
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          {userAvatarUrl ? (
-            <Image 
-              source={{ uri: userAvatarUrl }} 
-              style={styles.profileImage}
-              onError={() => console.log('Erreur chargement avatar')}
-            />
-          ) : (
-            <View style={[styles.profileImage, styles.initialsAvatar]}>
-              <Text style={styles.initialsText}>{userInitials}</Text>
-            </View>
-          )}
-          <Text style={styles.profileName}>{user?.primaryEmailAddress?.emailAddress}</Text>
+          <TouchableOpacity onPress={navigateToProfile}>
+            {userAvatarUrl ? (
+              <Image 
+                source={{ uri: userAvatarUrl }} 
+                style={styles.profileImage}
+                onError={() => console.log('Erreur chargement avatar')}
+              />
+            ) : (
+              <View style={[styles.profileImage, styles.initialsAvatar]}>
+                <Text style={styles.initialsText}>{userInitials}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          
+          <Text style={styles.profileName}>
+            {user?.fullName || user?.primaryEmailAddress?.emailAddress}
+          </Text>
+          
           {user?.fullName && (
-            <Text style={styles.profileRole}>{user.fullName}</Text>
+            <Text style={styles.profileRole}>
+              {user.primaryEmailAddress?.emailAddress}
+            </Text>
           )}
         </View>
 

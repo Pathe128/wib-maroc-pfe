@@ -21,6 +21,16 @@ import { getInitials, getUserAvatarUrl } from '../../utils/avatarUtils';
 
 type ProfileTab = 'info' | 'edit';
 
+interface FormData {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  company: string;
+  city: string;
+  sector: string;
+  about: string;
+}
+
 export default function ProfilScreen() {
   const { t } = useLanguage();
   const { user } = useUser();
@@ -31,14 +41,14 @@ export default function ProfilScreen() {
   const [modalVisible, setModalVisible] = useState(false);
 
   // États pour l'édition
-  const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    phone: user?.phoneNumbers?.[0]?.phoneNumber || '',
-    company: '',
-    city: '',
-    sector: '',
-    about: ''
+  const [formData, setFormData] = useState<FormData>({
+    firstName: (user?.unsafeMetadata?.firstName as string) || user?.firstName || '',
+    lastName: (user?.unsafeMetadata?.lastName as string) || user?.lastName || '',
+    phone: user?.phoneNumbers?.[0]?.phoneNumber || (user?.unsafeMetadata?.phone as string) || '',
+    company: (user?.unsafeMetadata?.company as string) || '',
+    city: (user?.unsafeMetadata?.city as string) || '',
+    sector: (user?.unsafeMetadata?.sector as string) || '',
+    about: (user?.unsafeMetadata?.about as string) || ''
   });
 
   // Récupérer l'avatar de l'utilisateur
@@ -64,18 +74,31 @@ export default function ProfilScreen() {
       if (!result.canceled && result.assets[0].uri) {
         setIsLoading(true);
         
-        // Ici vous devrez uploader l'image vers votre serveur
-        // et mettre à jour l'image de profil Clerk
-        // Pour l'instant, simulation d'un upload
-        setTimeout(() => {
+        try {
+          // Convertir l'image en format blob pour l'upload
+          const response = await fetch(result.assets[0].uri);
+          const blob = await response.blob();
+          
+          // Mettre à jour la photo de profil avec Clerk
+          if (user) {
+            await user.setProfileImage({ file: blob });
+            
+            // Rafraîchir les données de l'utilisateur
+            await user.reload();
+            
+            Alert.alert('Succès', 'Photo de profil mise à jour avec succès!');
+          }
+        } catch (error) {
+          console.error('Erreur lors du téléchargement de l\'image:', error);
+          Alert.alert('Erreur', 'Une erreur est survenue lors de la mise à jour de la photo de profil');
+        } finally {
           setIsLoading(false);
-          Alert.alert('Succès', 'Photo de profil mise à jour avec succès!');
-          // En production, vous devrez appeler l'API Clerk pour mettre à jour l'image
-        }, 2000);
+        }
       }
     } catch (error) {
       console.error('Erreur lors de la sélection de l\'image:', error);
       Alert.alert('Erreur', 'Une erreur est survenue lors de la sélection de l\'image');
+      setIsLoading(false);
     }
   };
 
@@ -85,14 +108,26 @@ export default function ProfilScreen() {
       
       // Mettre à jour les informations de base avec Clerk
       if (user) {
+        // Mettre à jour les métadonnées publiques avec les informations du formulaire
         await user.update({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
+          unsafeMetadata: {
+            ...user.unsafeMetadata, // Conserver les métadonnées existantes
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            company: formData.company,
+            city: formData.city,
+            sector: formData.sector,
+            about: formData.about
+          }
         });
       }
 
-      // Ici vous devrez sauvegarder les autres informations (company, city, etc.)
-      // dans votre base de données via une API
+      // Mettre à jour l'état local avec les nouvelles données
+      setFormData({
+        ...formData,
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      });
 
       setIsLoading(false);
       setIsEditing(false);
